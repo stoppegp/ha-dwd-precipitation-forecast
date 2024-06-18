@@ -7,12 +7,12 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/stoppegp/ha-dwd-precipitation-forecast",
-  "issue_tracker": "https://github.com/stoppegp/ha-dwd-precipitation-forecast/issues",
   "homekit": {},
+  "integration_type": "service",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/stoppegp/ha-dwd-precipitation-forecast/issues",
   "requirements": [],
   "ssdp": [],
-  "zeroconf": [],
-  "integration_type": "service",
-  "version": "0.1"
+  "version": "0.1",
+  "zeroconf": []
 }
