@@ -1,0 +1,15 @@
+{
+  "title": "DWD Niederschlagsvorhersage",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ort wählen",
+        "data": {
+          "name": "Ortsname",
+          "x": "Breitengrad",
+          "y": "Längengrad"
+        }
+      }
+    }
+  }
+}

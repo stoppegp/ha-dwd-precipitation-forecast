@@ -1,0 +1,15 @@
+{
+  "title": "DWD Precipitation Forecast",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose location",
+        "data": {
+          "name": "Location name",
+          "x": "Latitude",
+          "y": "Longitude"
+        }
+      }
+    }
+  }
+}
