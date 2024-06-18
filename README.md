@@ -21,9 +21,10 @@ The integration proveds these sensors:
 1. Open HACS in Home Assistant
 2. Select `Custom Repositories`
 3. Add `https://github.com/stoppegp/ha-dwd-precipitation-forecast`
-4. Select `Integration` as type
-5. Add a new device _DWD Precipitation Forecast_
-6. Insert the location name, latitude and longitude
+4. Select `DWD Precipitation Forecast` and download it
+5. Select `Integration` as type
+6. Add a new device _DWD Precipitation Forecast_
+7. Insert the location name, latitude and longitude
 
 ### Manual Installation
 
