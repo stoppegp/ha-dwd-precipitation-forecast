@@ -1,12 +1,13 @@
 {
   "domain": "dwd_precipitation_forecast",
-  "name": "DWD Niederschlagsvorhersage",
+  "name": "DWD Precipitation Forecast",
   "codeowners": [
     "@stoppegp"
   ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/stoppegp/ha-dwd-precipitation-forecast",
+  "issue_tracker": "https://github.com/stoppegp/ha-dwd-precipitation-forecast/issues",
   "homekit": {},
   "iot_class": "cloud_polling",
   "requirements": [],
