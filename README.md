@@ -39,11 +39,13 @@ The integration proveds these sensors:
 This is an example for a forecast card that you can create with data from this integration:
 
 ![Precipitation forecast card](precipitation_forecast_card.png)
+![Precipitation forecast card](precipitation_forecast_card2.png)
 
 To create a forecast card like this, you need following components:
 
 * [Mushroom Template card](https://github.com/piitaya/lovelace-mushroom)
 * [easy-time-jinja](https://github.com/Petro31/easy-time-jinja)
+* [lovelace-card-mod](https://github.com/thomasloven/lovelace-card-mod)
 
 Use this code for your dashboard:
 
@@ -86,7 +88,7 @@ primary: >-
   {% endif %}
 icon: mdi:weather-rainy
 icon_color: |-
-  {% if float(states('sensor.dwd_precipitation_forecast_malmsheim')) > 0 %}
+  {% if float(states(entity)) > 0 %}
   blue
   {% else %}
   grey
@@ -98,8 +100,8 @@ card_mod:
     ha-card {
       background-image: linear-gradient(90deg{% set entity = entity %}{% set duration = state_attr(entity, 'forecast').keys() | last | as_timestamp - now() | as_timestamp %}{% set hue_min = 200 %}{% set hue_max = 300 %}{% set prec_max = 20 %}{% for x, y in state_attr(entity, 'forecast').items() %}{% set pos = ((x | as_timestamp - (now() | as_timestamp))/duration*100) | round %}{% set hsl_h = (y/prec_max*(hue_max-hue_min)+hue_min)|round %}{% set hsl_l = 50 if y > 0 else 100 %}{% set hsl_alpha = 0.5 if y > 0 else 0 %}{% if pos >= -4 %}, hsla({{hsl_h}}, 100%, {{hsl_l}}%, {{hsl_alpha}}) {{ max(pos,0) }}%{% endif %}{% endfor %});
     }
-
 ```
+Change `sensor.dwd_precipitation_forecast_leipzig` in `entity` and `card_mod` to your sensor.
 
 ## Licenses
 
