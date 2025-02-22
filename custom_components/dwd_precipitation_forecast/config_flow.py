@@ -15,15 +15,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_LOCATION_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): str,
-        vol.Required("x"): float,
-        vol.Required("y"): float,
-    }
-)
-
-
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -66,7 +57,13 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_LOCATION_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({
+                vol.Required("name", default=self.hass.config.location_name): str,
+                vol.Required("x", default=self.hass.config.latitude): float,
+                vol.Required("y", default=self.hass.config.longitude): float,
+            }),
+            errors=errors
         )
 
 
