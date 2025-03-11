@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 from .const import DOMAIN
 from .coordinator import (
@@ -90,11 +91,11 @@ class DwdPrecipitationForecastEntity(
 
         self._attr_name = entity_description.name
         self._attr_unique_id = (
-            f"{entry.data.get('x')}-{entry.data.get('y')}--{entity_description.key}"
+            f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}--{entity_description.key}"
         )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data.get("x"), entry.data.get("y"))},
+            identifiers={(DOMAIN, entry.data.get(CONF_LATITUDE), entry.data.get(CONF_LONGITUDE))},
             name=f"DWD Precipitation Forecast {entry.title}",
             entry_type=DeviceEntryType.SERVICE,
         )
@@ -104,7 +105,7 @@ class DwdPrecipitationForecastEntity(
         try:
             if self.entity_description.key == "next":
                 next_precipitation = self.coordinator.api.get_next_precipitation(
-                    self.entry.data.get("x"), self.entry.data.get("y")
+                    self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                 )
                 return {
                     "end": next_precipitation["end"].isoformat()
@@ -118,13 +119,13 @@ class DwdPrecipitationForecastEntity(
                 }
             else:
                 next_precipitation = self.coordinator.api.get_next_precipitation(
-                    self.entry.data.get("x"), self.entry.data.get("y")
+                    self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                 )
                 return {
                     "forecast": {
                         k.isoformat(): v
                         for k, v in self.coordinator.api.get_precipitation_values(
-                            self.entry.data.get("x"), self.entry.data.get("y")
+                            self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                         ).items()
                     },
                     "next_start": max(next_precipitation["start"], datetime.now(UTC))
@@ -147,7 +148,7 @@ class DwdPrecipitationForecastEntity(
         try:
             if self.entity_description.key == "next":
                 next_precipitation = self.coordinator.api.get_next_precipitation(
-                    self.entry.data.get("x"), self.entry.data.get("y")
+                    self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                 )["start"]
                 return (
                     max(next_precipitation, datetime.now(UTC))
@@ -158,7 +159,7 @@ class DwdPrecipitationForecastEntity(
                 try:
                     return (
                         self.coordinator.api.get_next_precipitation(
-                            self.entry.data.get("x"), self.entry.data.get("y")
+                            self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                         )["start"]
                         - datetime.now(UTC)
                     ).total_seconds() <= 900
@@ -168,7 +169,7 @@ class DwdPrecipitationForecastEntity(
                 try:
                     return (
                         self.coordinator.api.get_next_precipitation(
-                            self.entry.data.get("x"), self.entry.data.get("y")
+                            self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                         )["start"]
                         - datetime.now(UTC)
                     ).total_seconds() <= 1800
@@ -178,7 +179,7 @@ class DwdPrecipitationForecastEntity(
                 try:
                     return (
                         self.coordinator.api.get_next_precipitation(
-                            self.entry.data.get("x"), self.entry.data.get("y")
+                            self.entry.data.get(CONF_LATITUDE), self.entry.data.get(CONF_LONGITUDE)
                         )["start"]
                         - datetime.now(UTC)
                     ).total_seconds() <= 3600
@@ -186,8 +187,8 @@ class DwdPrecipitationForecastEntity(
                     return False
             else:
                 return self.coordinator.api.get_value(
-                    self.entry.data.get("x"),
-                    self.entry.data.get("y"),
+                    self.entry.data.get(CONF_LATITUDE),
+                    self.entry.data.get(CONF_LONGITUDE),
                     datetime.now(UTC),
                 )
         except NotInAreaError:

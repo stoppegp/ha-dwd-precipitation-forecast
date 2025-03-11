@@ -6,8 +6,8 @@
         "title": "Ort wählen",
         "data": {
           "name": "Ortsname",
-          "x": "Breitengrad",
-          "y": "Längengrad"
+          "latitude": "Breitengrad",
+          "longitude": "Längengrad"
         }
       }
     }

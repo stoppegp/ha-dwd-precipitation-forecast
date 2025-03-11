@@ -6,8 +6,8 @@
         "title": "Choose location",
         "data": {
           "name": "Location name",
-          "x": "Latitude",
-          "y": "Longitude"
+          "latitude": "Latitude",
+          "longitude": "Longitude"
         }
       }
     }

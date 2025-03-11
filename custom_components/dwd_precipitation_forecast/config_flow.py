@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 from .const import DOMAIN
 
@@ -60,8 +61,8 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required("name", default=self.hass.config.location_name): str,
-                vol.Required("x", default=self.hass.config.latitude): float,
-                vol.Required("y", default=self.hass.config.longitude): float,
+                vol.Required(CONF_LATITUDE, default=self.hass.config.latitude): float,
+                vol.Required(CONF_LONGITUDE, default=self.hass.config.longitude): float,
             }),
             errors=errors
         )
