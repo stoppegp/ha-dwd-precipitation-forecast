@@ -11,7 +11,7 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/stoppegp/ha-dwd-precipitation-forecast/issues",
-  "requirements": [],
+  "requirements": ["h5py>=3.16.0"],
   "ssdp": [],
   "version": "0.2.0",
   "zeroconf": []

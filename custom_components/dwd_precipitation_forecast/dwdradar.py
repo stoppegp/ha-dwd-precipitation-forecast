@@ -1,15 +1,24 @@
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 import math
+import re
 import tarfile
 
+import h5py
 import numpy as np
 import requests
 import logging
 
-API_URL = "https://opendata.dwd.de/weather/radar/composite/rv/DE1200_RV_LATEST.tar.bz2"
+API_URL = "https://opendata.dwd.de/weather/radar/composite/rv/composite_rv_LATEST.tar"
+
+# Filename: composite_rv_YYYYMMDD_HHMM_PPP.hd5 (PPP = forecast in minutes)
+_MEMBER_RE = re.compile(r"composite_rv_(\d{8})_(\d{4})_(\d{3})")
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# 6370.04 * (1 + sin(60 deg)), constant part of projection
+_PROJ_SCALE = 6370.04 * (1 + math.sin(60 / 180 * math.pi))
 
 
 class NotInAreaError(Exception):
@@ -35,37 +44,55 @@ class DWDRadar:
         _LOGGER.info(tar)
 
         for tarmember in tar.getmembers():
-            radar_minute_delta = int(tarmember.name[-3:])
+            match = _MEMBER_RE.search(tarmember.name)
+            if not tarmember.isfile() or match is None:
+                continue
+            radar_minute_delta = int(match.group(3))
             radar_time = datetime.strptime(
-                tarmember.name[-14:-4], "%y%m%d%H%M"
+                match.group(1) + match.group(2), "%Y%m%d%H%M"
             ).replace(tzinfo=UTC) + timedelta(minutes=radar_minute_delta)
             f = tar.extractfile(tarmember)
-            content = f.read().split(b"\x03", 1)[1]
-            radars[radar_time] = np.frombuffer(content, dtype="uint16").reshape(
-                self.ysize, self.xsize
-            )
+            radars[radar_time] = self._read_hdf5(f.read())
+        radars = dict(sorted(radars.items()))
         self.radars = radars
         _LOGGER.info("got radars")
+
+    def _read_hdf5(self, content):
+        """Read one ODIM HDF5 composite as uint16 array in 0.001 mm per 5 min."""
+        with h5py.File(BytesIO(content), "r") as h5:
+            data = h5["dataset1/data1/data"][()]
+            what = h5["dataset1/data1/what"].attrs
+
+            def attr(name, default):
+                return np.asarray(what[name]).item() if name in what else default
+
+            gain = attr("gain", 1.0)
+            offset = attr("offset", 0.0)
+            nodata = attr("nodata", None)
+            undetect = attr("undetect", None)
+
+        if data.shape != (self.ysize, self.xsize):
+            raise ValueError(f"unexpected radar grid shape {data.shape}")
+
+        # value = offset + gain * raw (mm per 5 min); saved as uint16 in
+        # 0,001 mm (up to 65,5 mm per 5 min), memory usage as before
+        values = (data.astype(np.float32) * gain + offset) * 1000
+        invalid = ~np.isfinite(values)
+        for flag in (nodata, undetect):
+            if flag is not None:
+                invalid |= data == flag
+        values[invalid] = 0
+        compact = np.clip(np.rint(values), 0, 65535).astype(np.uint16)
+        # ODIM: first line = north; index get_location_index counts from south
+        return compact[::-1]
 
     def get_location_index(self, x, y):
         if self.radars is None:
             raise RadarNotAvailableError
-        x_cart = int(
-            6370.04
-            * (1 + math.sin(60 / 180 * math.pi))
-            / (1 + math.sin(x / 180 * math.pi))
-            * math.cos(x / 180 * math.pi)
-            * math.sin((y - 10) / 180 * math.pi)
-            + 543.4622
-        )
-        y_cart = int(
-            -6370.04
-            * (1 + math.sin(60 / 180 * math.pi))
-            / (1 + math.sin(x / 180 * math.pi))
-            * math.cos(x / 180 * math.pi)
-            * math.cos((y - 10) / 180 * math.pi)
-            + 4808.645
-        )
+        k = _PROJ_SCALE / (1 + math.sin(x / 180 * math.pi)) * math.cos(x / 180 * math.pi)
+        lon = (y - 10) / 180 * math.pi
+        x_cart = int(k * math.sin(lon) + 543.4622)
+        y_cart = int(-k * math.cos(lon) + 4808.645)
         if not (0 <= y_cart < self.ysize) or not (0 <= x_cart < self.xsize):
             raise NotInAreaError
         return (x_cart, y_cart)
@@ -76,13 +103,7 @@ class DWDRadar:
             self.get_radars()
         values = {}
         for radar_time, radar in self.radars.items():
-            value_raw = radar[y_cart][x_cart]
-            value = (
-                value_raw & 0b0000111111111111
-                if not (value_raw & 0b0010000000000000)
-                else 0
-            )
-            values[radar_time] = float(value) / 100 * 12
+            values[radar_time] = round(float(radar[y_cart][x_cart]) / 1000 * 12, 3)
         return values
 
     def get_value(self, x, y, search_time: datetime):
